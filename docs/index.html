@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Air Quality Index — India</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #f0f4f8;
+  --surface: #ffffff;
+  --surface2: #f7fafc;
+  --border: #e2e8f0;
+  --border2: #cbd5e0;
+  --accent: #0ea5e9;
+  --accent-dark: #0284c7;
+  --accent-dim: rgba(14,165,233,0.10);
+  --accent-glow: rgba(14,165,233,0.20);
+  --text: #0f172a;
+  --text-dim: #64748b;
+  --text-muted: #94a3b8;
+  --danger: #ef4444;
+  --user-bubble: #0ea5e9;
+  --ai-bubble: #ffffff;
+  --sidebar-w: 260px;
+  --r: 16px;
+  --fh: 'Plus Jakarta Sans', sans-serif;
+  --fm: 'JetBrains Mono', monospace;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:var(--fh);display:flex;height:100dvh}
+
+/* ── SIDEBAR ── */
+#sidebar {
+  width:var(--sidebar-w);flex-shrink:0;
+  background:var(--surface);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  height:100%;
+  transition:transform 0.3s ease;
+  z-index:20;
+}
+.sidebar-head {
+  padding:20px 16px 14px;
+  border-bottom:1px solid var(--border);
+}
+.brand {
+  display:flex;align-items:center;gap:10px;margin-bottom:16px;
+}
+.brand-icon {
+  width:36px;height:36px;
+  background:linear-gradient(135deg,#0ea5e9,#38bdf8);
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:17px;
+  box-shadow:0 4px 12px rgba(14,165,233,0.35);
+  animation:float 4s ease-in-out infinite;
+}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.brand-text{font-weight:800;font-size:0.92rem;color:var(--text);letter-spacing:-0.02em;line-height:1.1}
+.brand-text span{color:var(--accent)}
+.brand-sub{font-size:0.58rem;color:var(--text-muted);letter-spacing:0.1em;text-transform:uppercase;margin-top:1px}
+
+.new-chat-btn {
+  width:100%;padding:9px 14px;
+  background:var(--accent);color:#fff;
+  border:none;border-radius:10px;cursor:pointer;
+  font-family:var(--fh);font-weight:600;font-size:0.78rem;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  transition:all 0.18s;
+  box-shadow:0 2px 8px rgba(14,165,233,0.35);
+}
+.new-chat-btn:hover{background:var(--accent-dark);transform:translateY(-1px);box-shadow:0 4px 14px rgba(14,165,233,0.4)}
+.new-chat-btn:active{transform:translateY(0)}
+
+.sidebar-section{padding:12px 16px 6px;font-size:0.6rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;font-weight:600}
+
+#history-list {
+  flex:1;overflow-y:auto;padding:4px 8px 12px;
+}
+#history-list::-webkit-scrollbar{width:3px}
+#history-list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+.hist-item {
+  display:flex;align-items:center;gap:8px;
+  padding:8px 10px;border-radius:10px;cursor:pointer;
+  font-size:0.75rem;color:var(--text-dim);
+  transition:all 0.15s;
+  border:1px solid transparent;
+  margin-bottom:2px;
+  animation:fadeSlide 0.25s ease;
+}
+@keyframes fadeSlide{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+.hist-item:hover{background:var(--surface2);color:var(--text);border-color:var(--border)}
+.hist-item.active{background:var(--accent-dim);color:var(--accent-dark);border-color:rgba(14,165,233,0.2)}
+.hist-icon{font-size:13px;flex-shrink:0}
+.hist-text{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:0.72rem}
+.hist-del{opacity:0;width:18px;height:18px;border-radius:5px;border:none;background:none;color:var(--text-muted);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.15s}
+.hist-item:hover .hist-del{opacity:1}
+.hist-del:hover{background:#fee2e2;color:var(--danger)}
+
+.hist-empty{text-align:center;padding:32px 16px;color:var(--text-muted);font-size:0.72rem;line-height:1.6}
+.hist-empty .he-icon{font-size:28px;margin-bottom:8px}
+
+.sidebar-footer{padding:12px 16px;border-top:1px solid var(--border)}
+.clear-all-btn{width:100%;padding:7px 12px;background:none;border:1px solid var(--border);border-radius:8px;cursor:pointer;font-family:var(--fh);font-size:0.7rem;color:var(--text-dim);transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:6px}
+.clear-all-btn:hover{border-color:#fca5a5;color:var(--danger);background:#fef2f2}
+
+/* ── MAIN ── */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+
+/* header */
+header{
+  position:relative;z-index:10;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 24px;
+  border-bottom:1px solid var(--border);
+  background:rgba(255,255,255,0.9);
+  backdrop-filter:blur(20px);
+  flex-shrink:0;
+}
+.h-left{display:flex;align-items:center;gap:10px}
+#menu-btn{display:none;background:none;border:none;cursor:pointer;padding:4px;border-radius:8px;color:var(--text-dim);font-size:18px;transition:all 0.15s}
+#menu-btn:hover{background:var(--surface2);color:var(--text)}
+.page-title{font-weight:800;font-size:1rem;letter-spacing:-0.02em;color:var(--text)}
+.page-title span{color:var(--accent)}
+.page-subtitle{font-size:0.6rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;margin-top:1px}
+.live-pill{display:flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:100px;padding:5px 12px;font-size:0.62rem;color:var(--text-dim);letter-spacing:0.07em;text-transform:uppercase}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#22c55e;animation:blink 2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(34,197,94,0)}50%{opacity:0.8;box-shadow:0 0 0 4px rgba(34,197,94,0.15)}}
+
+/* chips */
+.chips{
+  position:relative;z-index:5;
+  padding:9px 24px;border-bottom:1px solid var(--border);
+  background:rgba(255,255,255,0.8);
+  display:flex;gap:6px;flex-wrap:wrap;align-items:center;
+  flex-shrink:0;
+}
+.chips-lbl{font-size:0.58rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;font-weight:600;margin-right:2px}
+.chip{background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);padding:5px 12px;border-radius:100px;font-size:0.68rem;font-family:var(--fh);cursor:pointer;transition:all 0.15s;white-space:nowrap;font-weight:500}
+.chip:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim);transform:translateY(-1px)}
+.chip:active{transform:translateY(0)}
+
+/* chat */
+#chat{flex:1;overflow-y:auto;padding:20px 0 8px;display:flex;flex-direction:column;scroll-behavior:smooth;background:var(--bg)}
+#chat::-webkit-scrollbar{width:4px}
+#chat::-webkit-scrollbar-track{background:transparent}
+#chat::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+
+.row{display:flex;padding:5px 24px;gap:10px;animation:msgIn 0.3s cubic-bezier(0.34,1.56,0.64,1)}
+@keyframes msgIn{from{opacity:0;transform:translateY(12px) scale(0.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+.row.user{flex-direction:row-reverse}
+
+.av{width:30px;height:30px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;margin-top:4px;box-shadow:var(--shadow)}
+.av.ai{background:linear-gradient(135deg,#0ea5e9,#38bdf8);color:#fff}
+.av.user{background:linear-gradient(135deg,#6366f1,#818cf8);color:#fff}
+
+.bubble{max-width:min(640px,78%);padding:12px 16px;border-radius:var(--r);font-size:0.8rem;line-height:1.75;box-shadow:var(--shadow)}
+.bubble.ai{background:var(--ai-bubble);border:1px solid var(--border);border-top-left-radius:4px;color:var(--text)}
+.bubble.user{background:var(--user-bubble);border:none;border-top-right-radius:4px;color:#fff}
+.bubble.user .ts{color:rgba(255,255,255,0.65)}
+.ts{font-size:0.57rem;color:var(--text-muted);margin-top:6px;letter-spacing:0.04em}
+
+/* formatted */
+.bubble h3{font-weight:700;font-size:0.83rem;color:var(--accent-dark);margin-bottom:8px}
+.bubble p{margin-bottom:7px}
+.bubble p:last-child{margin-bottom:0}
+.bubble li{padding:2px 0 2px 10px;border-left:2px solid var(--accent-dim);margin-bottom:3px;color:var(--text-dim)}
+.bubble strong{color:var(--accent-dark);font-weight:600}
+
+/* tables */
+.tbl-wrap{overflow-x:auto;margin:10px 0;border-radius:10px;border:1px solid var(--border);box-shadow:var(--shadow)}
+table{width:100%;border-collapse:collapse;font-size:0.72rem;font-family:var(--fm)}
+thead{background:linear-gradient(135deg,#f0f9ff,#e0f2fe)}
+th{text-align:left;padding:8px 12px;font-size:0.62rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--accent-dark);border-bottom:1px solid var(--border)}
+td{padding:7px 12px;border-bottom:1px solid var(--border);color:var(--text)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#f8faff;transition:background 0.1s}
+
+.badge{display:inline-block;padding:2px 9px;border-radius:100px;font-size:0.62rem;font-weight:600;letter-spacing:0.04em}
+.g{background:#dcfce7;color:#15803d;border:1px solid #bbf7d0}
+.m{background:#fef9c3;color:#a16207;border:1px solid #fde68a}
+.s{background:#ffedd5;color:#c2410c;border:1px solid #fed7aa}
+.u{background:#fee2e2;color:#b91c1c;border:1px solid #fecaca}
+.vu{background:#f3e8ff;color:#7e22ce;border:1px solid #e9d5ff}
+.hz{background:#fce7f3;color:#9d174d;border:1px solid #fbcfe8}
+
+.stats{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.sc{background:linear-gradient(135deg,#f0f9ff,#e0f2fe);border:1px solid #bae6fd;border-radius:10px;padding:10px 14px;flex:1;min-width:90px;transition:transform 0.2s}
+.sc:hover{transform:translateY(-2px)}
+.sc .v{font-family:var(--fh);font-size:1.2rem;font-weight:800;color:var(--accent-dark);line-height:1}
+.sc .l{font-size:0.6rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.08em;margin-top:3px;font-weight:600}
+
+/* typing */
+.typing-row{display:flex;padding:5px 24px;gap:10px;animation:msgIn 0.3s ease}
+.typing-bub{background:var(--ai-bubble);border:1px solid var(--border);border-radius:var(--r);border-top-left-radius:4px;padding:12px 16px;display:flex;align-items:center;gap:5px;box-shadow:var(--shadow)}
+.typing-bub span{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:typingBounce 1.2s infinite}
+.typing-bub span:nth-child(2){animation-delay:.18s}
+.typing-bub span:nth-child(3){animation-delay:.36s}
+@keyframes typingBounce{0%,100%{opacity:.3;transform:translateY(0) scale(0.85)}50%{opacity:1;transform:translateY(-5px) scale(1)}}
+
+/* error */
+.err{background:#fff5f5;border:1px solid #fecaca;border-radius:var(--r);border-top-left-radius:4px;padding:11px 15px;font-size:0.78rem;color:#b91c1c;max-width:min(640px,78%);box-shadow:var(--shadow)}
+
+/* welcome */
+#welcome{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:40px 24px;text-align:center;animation:welcomeIn 0.5s cubic-bezier(0.34,1.56,0.64,1)}
+@keyframes welcomeIn{from{opacity:0;transform:translateY(24px) scale(0.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+.w-icon{width:72px;height:72px;background:linear-gradient(135deg,#0ea5e9,#38bdf8);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:32px;margin-bottom:20px;box-shadow:0 8px 32px rgba(14,165,233,0.35);animation:float 4s ease-in-out infinite}
+.w-title{font-weight:800;font-size:1.7rem;letter-spacing:-0.03em;margin-bottom:10px;line-height:1.1;color:var(--text)}
+.w-title span{color:var(--accent)}
+.w-sub{color:var(--text-dim);font-size:0.78rem;max-width:400px;line-height:1.75;margin-bottom:28px}
+.w-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:10px;max-width:580px;width:100%}
+.wc{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 16px;cursor:pointer;text-align:left;transition:all 0.2s;box-shadow:var(--shadow)}
+.wc:hover{border-color:var(--accent);background:linear-gradient(135deg,#f0f9ff,#e0f2fe);transform:translateY(-3px);box-shadow:var(--shadow-md)}
+.wc:active{transform:translateY(-1px)}
+.wc .ci{font-size:18px;margin-bottom:8px}
+.wc .ct{font-weight:700;font-size:0.76rem;margin-bottom:3px;color:var(--text)}
+.wc .cd{font-size:0.64rem;color:var(--text-dim);line-height:1.5}
+
+/* input */
+.input-area{position:relative;z-index:10;padding:12px 20px 16px;border-top:1px solid var(--border);background:rgba(255,255,255,0.95);backdrop-filter:blur(20px);flex-shrink:0}
+.iw{display:flex;gap:8px;align-items:flex-end;background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:9px 9px 9px 15px;transition:all 0.2s;box-shadow:var(--shadow)}
+.iw:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim),var(--shadow)}
+#inp{flex:1;background:none;border:none;outline:none;font-family:var(--fh);font-size:0.82rem;color:var(--text);resize:none;max-height:110px;line-height:1.6;min-height:22px}
+#inp::placeholder{color:var(--text-muted)}
+#sbtn{width:34px;height:34px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--accent),var(--accent-dark));color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.18s;box-shadow:0 2px 8px rgba(14,165,233,0.35)}
+#sbtn:hover{transform:scale(1.08) translateY(-1px);box-shadow:0 4px 14px rgba(14,165,233,0.45)}
+#sbtn:active{transform:scale(0.96)}
+#sbtn:disabled{background:var(--border);box-shadow:none;cursor:not-allowed;transform:none}
+.hint{font-size:0.6rem;color:var(--text-muted);text-align:center;margin-top:6px;letter-spacing:0.04em}
+
+/* sidebar overlay for mobile */
+#sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:15;backdrop-filter:blur(2px)}
+
+/* aqi scale legend */
+.aqi-legend{display:flex;gap:5px;flex-wrap:wrap;margin:8px 0;padding:10px 12px;background:var(--surface2);border-radius:10px;border:1px solid var(--border)}
+.aqi-legend-item{display:flex;align-items:center;gap:4px;font-size:0.6rem;color:var(--text-dim)}
+.aqi-dot{width:7px;height:7px;border-radius:50%}
+
+@media(max-width:700px){
+  #sidebar{position:fixed;top:0;left:0;height:100%;transform:translateX(-100%)}
+  #sidebar.open{transform:translateX(0);box-shadow:var(--shadow-md)}
+  #sidebar-overlay.open{display:block}
+  #menu-btn{display:flex}
+  header{padding:12px 16px}
+  .chips{padding:8px 14px}
+  .row,.typing-row{padding:5px 14px}
+  .input-area{padding:10px 14px 14px}
+  .bubble{max-width:88%}
+  .w-grid{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<div id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <div class="sidebar-head">
+    <div class="brand">
+      <div class="brand-icon">💨</div>
+      <div>
+        <div class="brand-text">Air <span>Quality</span> Index</div>
+        <div class="brand-sub">India AQI Intelligence</div>
+      </div>
+    </div>
+    <button class="new-chat-btn" onclick="newChat()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      New Chat
+    </button>
+  </div>
+
+  <div class="sidebar-section">Recent Chats</div>
+  <div id="history-list">
+    <div class="hist-empty" id="hist-empty">
+      <div class="he-icon">💬</div>
+      Your conversations will appear here
+    </div>
+  </div>
+
+  <div class="sidebar-footer">
+    <button class="clear-all-btn" onclick="clearAllHistory()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+      Clear All History
+    </button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+  <header>
+    <div class="h-left">
+      <button id="menu-btn" onclick="toggleSidebar()">☰</button>
+      <div>
+        <div class="page-title">Air <span>Quality Index</span></div>
+        <div class="page-subtitle">Powered by Databricks AI</div>
+      </div>
+    </div>
+    <div class="live-pill"><div class="live-dot"></div>Live Model</div>
+  </header>
+
+  <div class="chips">
+    <span class="chips-lbl">Quick →</span>
+    <button class="chip" onclick="chip(this)">🏆 Best AQI cities</button>
+    <button class="chip" onclick="chip(this)">☠️ Most polluted cities</button>
+    <button class="chip" onclick="chip(this)">🗺️ Worst polluted states</button>
+    <button class="chip" onclick="chip(this)">📊 Raw AQI data</button>
+    <button class="chip" onclick="chip(this)">⚠️ Severely polluted states</button>
+    <button class="chip" onclick="chip(this)">ℹ️ What is AQI?</button>
+  </div>
+
+  <div id="chat">
+    <div id="welcome">
+      <div class="w-icon">💨</div>
+      <div class="w-title">Air <span>Quality Index</span><br/>Intelligence</div>
+      <div class="w-sub">Ask about AQI levels, pollution rankings, and air quality data across Indian cities and states — powered by a live Databricks AI model.</div>
+      <div class="w-grid">
+        <div class="wc" onclick="ask('Which cities have the best air quality in India?')">
+          <div class="ci">✅</div><div class="ct">Cleanest Cities</div><div class="cd">Best AQI scores across India</div>
+        </div>
+        <div class="wc" onclick="ask('Which are the most polluted cities in India?')">
+          <div class="ci">🚨</div><div class="ct">Top Polluted</div><div class="cd">Cities with highest AQI levels</div>
+        </div>
+        <div class="wc" onclick="ask('Show severely polluted states with AQI breakdown')">
+          <div class="ci">🗺️</div><div class="ct">State Analysis</div><div class="cd">State-wise pollution severity</div>
+        </div>
+        <div class="wc" onclick="ask('Give me raw AQI data for all cities')">
+          <div class="ci">📈</div><div class="ct">Raw AQI Data</div><div class="cd">Full dataset, all cities & states</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="input-area">
+    <div class="iw">
+      <textarea id="inp" placeholder="Ask about AQI, cities, states, pollution levels…" rows="1"></textarea>
+      <button id="sbtn" onclick="send()" title="Send">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+        </svg>
+      </button>
+    </div>
+    <div class="hint">Enter to send · Shift+Enter for new line</div>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ──
+const API_URL = 'https://aqi-chatbot.onrender.com/api/chat';
+const STORAGE_KEY = 'aqi_chat_history_v2';
+
+// ── STATE ──
+const chat = document.getElementById('chat');
+const inp  = document.getElementById('inp');
+const sbtn = document.getElementById('sbtn');
+const welcome = document.getElementById('welcome');
+let busy = false;
+let sessions = [];       // [{id, title, messages:[{role,content,html,time}]}]
+let activeId = null;
+
+// ── SIDEBAR ──
+function toggleSidebar(){
+  const s=document.getElementById('sidebar'), o=document.getElementById('sidebar-overlay');
+  s.classList.toggle('open'); o.classList.toggle('open');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
+}
+
+// ── HISTORY PERSISTENCE ──
+function loadHistory(){
+  try{ sessions=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]'); }catch{ sessions=[]; }
+  renderHistoryList();
+}
+function saveHistory(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions)); }
+
+function renderHistoryList(){
+  const list=document.getElementById('history-list');
+  const empty=document.getElementById('hist-empty');
+  if(sessions.length===0){ empty.style.display=''; list.innerHTML=''; list.appendChild(empty); return; }
+  empty.style.display='none';
+  list.innerHTML='';
+  [...sessions].reverse().forEach(s=>{
+    const el=document.createElement('div');
+    el.className='hist-item'+(s.id===activeId?' active':'');
+    el.innerHTML=`<span class="hist-icon">💬</span><span class="hist-text">${esc(s.title)}</span><button class="hist-del" title="Delete" onclick="deleteSession('${s.id}',event)">✕</button>`;
+    el.addEventListener('click',()=>loadSession(s.id));
+    list.appendChild(el);
+  });
+}
+
+function newChat(){
+  activeId=null;
+  chat.innerHTML='';
+  welcome.style.display='';
+  chat.appendChild(welcome);
+  renderHistoryList();
+  closeSidebar();
+  inp.focus();
+}
+
+function loadSession(id){
+  const s=sessions.find(x=>x.id===id); if(!s) return;
+  activeId=id;
+  chat.innerHTML='';
+  s.messages.forEach(m=>{
+    if(m.role==='user') _appendUser(m.content, m.time, false);
+    else _appendAI(m.html||esc(m.content), m.time, false);
+  });
+  renderHistoryList();
+  closeSidebar();
+  scrollEnd();
+}
+
+function deleteSession(id, e){
+  e.stopPropagation();
+  sessions=sessions.filter(s=>s.id!==id);
+  saveHistory();
+  if(activeId===id) newChat();
+  else renderHistoryList();
+}
+
+function clearAllHistory(){
+  if(!confirm('Clear all chat history?')) return;
+  sessions=[]; saveHistory(); newChat();
+}
+
+function ensureSession(firstMsg){
+  if(!activeId){
+    const id='s'+Date.now();
+    const title=firstMsg.length>40?firstMsg.slice(0,38)+'…':firstMsg;
+    sessions.push({id, title, messages:[]});
+    activeId=id;
+    saveHistory();
+    renderHistoryList();
+  }
+  return sessions.find(s=>s.id===activeId);
+}
+
+function addMsgToSession(role, content, html, time){
+  const s=sessions.find(x=>x.id===activeId); if(!s) return;
+  s.messages.push({role,content,html,time});
+  saveHistory();
+}
+
+// ── UTILS ──
+function ts(){ return new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}); }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function scrollEnd(){ chat.scrollTo({top:chat.scrollHeight,behavior:'smooth'}); }
+function hideWelcome(){ if(welcome&&welcome.parentNode===chat) chat.removeChild(welcome); }
+
+// ── RENDER MESSAGES ──
+function _appendUser(txt, time, animate=true){
+  hideWelcome();
+  const r=document.createElement('div');
+  r.className='row user';
+  if(!animate) r.style.animation='none';
+  r.innerHTML=`<div class="av user">🧑</div><div class="bubble user">${esc(txt)}<div class="ts">${time||ts()}</div></div>`;
+  chat.appendChild(r); scrollEnd();
+}
+
+function _appendAI(html, time, animate=true){
+  const r=document.createElement('div');
+  r.className='row';
+  if(!animate) r.style.animation='none';
+  r.innerHTML=`<div class="av ai">💨</div><div class="bubble ai">${html}<div class="ts">${time||ts()}</div></div>`;
+  chat.appendChild(r); scrollEnd();
+}
+
+function showTyping(){
+  const r=document.createElement('div'); r.className='typing-row'; r.id='typing';
+  r.innerHTML=`<div class="av ai">💨</div><div class="typing-bub"><span></span><span></span><span></span></div>`;
+  chat.appendChild(r); scrollEnd();
+}
+function removeTyping(){ const t=document.getElementById('typing'); if(t)t.remove(); }
+
+function appendError(msg){
+  const r=document.createElement('div'); r.className='row';
+  r.innerHTML=`<div class="av ai">💨</div><div class="err">⚠️ ${esc(msg)}</div>`;
+  chat.appendChild(r); scrollEnd();
+}
+
+// ── FORMAT RESPONSE ──
+function aqiClass(n){ n=parseFloat(n); if(isNaN(n))return''; if(n<=50)return'g'; if(n<=100)return'm'; if(n<=150)return's'; if(n<=200)return'u'; if(n<=300)return'vu'; return'hz'; }
+function aqiLabel(n){ n=parseFloat(n); if(isNaN(n))return''; if(n<=50)return'Good'; if(n<=100)return'Moderate'; if(n<=150)return'Sensitive'; if(n<=200)return'Unhealthy'; if(n<=300)return'Very Unhealthy'; return'Hazardous'; }
+
+function format(raw){
+  if(raw===null||raw===undefined) return '<p>No response received.</p>';
+  if(Array.isArray(raw)&&raw.length>0&&typeof raw[0]==='object') return renderTable(raw);
+  if(typeof raw==='object'&&!Array.isArray(raw)) return renderObj(raw);
+  const s=typeof raw==='string'?raw:JSON.stringify(raw,null,2);
+  return mdToHtml(s);
+}
+
+function renderTable(arr){
+  const keys=Object.keys(arr[0]);
+  const aqiKey=keys.find(k=>/aqi/i.test(k));
+  let h=`<div class="tbl-wrap"><table><thead><tr>`;
+  keys.forEach(k=>{h+=`<th>${esc(k)}</th>`;});
+  h+=`</tr></thead><tbody>`;
+  arr.slice(0,60).forEach(row=>{
+    h+='<tr>';
+    keys.forEach(k=>{
+      if(k===aqiKey){const c=aqiClass(row[k]),l=aqiLabel(row[k]);h+=`<td><span class="badge ${c}">${esc(String(row[k]))}${l?' — '+l:''}</span></td>`;}
+      else{h+=`<td>${esc(String(row[k]??''))}</td>`;}
+    });
+    h+='</tr>';
+  });
+  if(arr.length>60)h+=`<tr><td colspan="${keys.length}" style="color:var(--text-muted);font-size:0.68rem;text-align:center;padding:10px">… and ${arr.length-60} more rows</td></tr>`;
+  h+=`</tbody></table></div>`;
+  return h;
+}
+
+function renderObj(obj){
+  let h='';
+  const scalars=Object.entries(obj).filter(([,v])=>typeof v!=='object'&&!Array.isArray(v));
+  const arrKey=Object.keys(obj).find(k=>Array.isArray(obj[k])&&obj[k].length>0&&typeof obj[k][0]==='object');
+  if(scalars.length){h+=`<div class="stats">`;scalars.forEach(([k,v])=>{h+=`<div class="sc"><div class="v">${esc(String(v))}</div><div class="l">${esc(k)}</div></div>`;});h+=`</div>`;}
+  if(arrKey){h+=`<h3>${esc(arrKey)}</h3>`+renderTable(obj[arrKey]);}
+  if(!h)h=`<pre style="white-space:pre-wrap;font-size:0.72rem;color:var(--text)">${esc(JSON.stringify(obj,null,2))}</pre>`;
+  return h;
+}
+
+function mdToHtml(s){
+  return '<p>'+s
+    .replace(/```[\s\S]*?```/g,m=>`<code style="display:block;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:7px 0;font-size:0.72rem;overflow-x:auto;white-space:pre;font-family:var(--fm);color:#0f172a">${esc(m.replace(/```/g,'').trim())}</code>`)
+    .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+    .replace(/^#{1,3}\s+(.+)$/gm,'<h3>$1</h3>')
+    .replace(/^\d+\.\s+(.+)$/gm,'<li>$1</li>')
+    .replace(/^[-*]\s+(.+)$/gm,'<li>$1</li>')
+    .replace(/\n\n/g,'</p><p>')
+    .replace(/\n/g,'<br/>')+'</p>';
+}
+
+// ── CHIP / ASK ──
+function chip(btn){ inp.value=btn.textContent.replace(/^[^\s]+\s/,''); send(); }
+function ask(t){ inp.value=t; send(); }
+
+// ── AUTO-RESIZE ──
+inp.addEventListener('input',()=>{inp.style.height='auto';inp.style.height=Math.min(inp.scrollHeight,110)+'px';});
+inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}});
+
+// ── SEND ──
+async function send(){
+  const txt=inp.value.trim();
+  if(!txt||busy) return;
+  busy=true; sbtn.disabled=true;
+  inp.value=''; inp.style.height='auto';
+
+  const session=ensureSession(txt);
+  const userTime=ts();
+  _appendUser(txt, userTime);
+  addMsgToSession('user', txt, null, userTime);
+  showTyping();
+
+  try{
+    const res=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:txt})});
+    const json=await res.json();
+    removeTyping();
+    if(!res.ok) throw new Error(json.error||`Server error ${res.status}`);
+    const html=format(json.answer);
+    const aiTime=ts();
+    _appendAI(html, aiTime);
+    addMsgToSession('ai', typeof json.answer==='string'?json.answer:JSON.stringify(json.answer), html, aiTime);
+  }catch(err){
+    removeTyping();
+    appendError(err.message||'Something went wrong. Please try again.');
+  }finally{
+    busy=false; sbtn.disabled=false; inp.focus();
+  }
+}
+
+// ── INIT ──
+loadHistory();
+</script>
+</body>
+</html>
